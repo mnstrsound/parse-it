@@ -15,7 +15,6 @@
     "cheerio": "^0.22.0",
     "https-proxy-agent": "^1.0.0",
     "node-fetch": "^1.6.3",
-    "request": "^2.79.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.0",

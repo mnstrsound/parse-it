@@ -1,5 +1,3 @@
-// let path = require('path');
-// let request = require('request');
 let fs = require('fs');
 let cheerio = require('cheerio');
 let fetch = require('node-fetch');
@@ -9,57 +7,6 @@ let download = require('./utils/download');
 let Proxy = require('./utils/proxy');
 
 let {url, item, fields, pager} = options;
-
-// function getUploadContent(options) {
-//     return download(options);
-// }
-//
-// function isAbsoluteURL(url) {
-//     return /^https?:\/\//.test(url)
-// }
-//
-// function isFromRoot(path) {
-//     return /^\//.test(path);
-// }
-//
-// function isRelative(path) {
-//     return /^\.{1,2}\//.test(path);
-// }
-
-
-// function getItemContent(field, $field, $) {
-//     let content;
-//
-//     if (field.multiple) {
-//         content = [];
-//
-//         $field.each((index, item) => {
-//             content.push(
-//                 field.type === 'map'
-//                     ? getMapContent(field, $(item), $)
-//                     : getSimpleContent(field, $(item))
-//             )
-//         });
-//     } else {
-//         content = getSimpleContent(field, $field)
-//     }
-//
-//     return content;
-// }
-//
-// function getMapContent(field, $field, $) {
-//     let map = {};
-//
-//     field.items.forEach(item => {
-//         map[item.key] = getSimpleContent(item, getField(item, $field, $));
-//     });
-//
-//     return map;
-// }
-//
-// function getSimpleContent(field, $field) {
-//     field.strategy($field);
-// }
 
 function normalizeURL(parentURL, childURL) {
     let matches = parentURL.match(/^(https?:\/\/[^/]+)/);
@@ -77,31 +24,41 @@ function getElem(field, $post, $) {
 
 function getValue(field, $elem, $) {
     return new Promise((resolve, reject) => {
+        let value = field.strategy($elem);
+
         if (!field.upload) {
-            resolve(field.strategy($elem));
+            resolve(value);
         } else {
-            resolve(download({
-                url: normalizeURL(url, field.strategy($elem)),
-                dir: './media'
-            }));
+            resolve(value
+                ? download({
+                    url: normalizeURL(url, field.strategy($elem)),
+                    dir: './media'
+                })
+                : ''
+            );
         }
     });
 }
 
 function getMapValue(field, $elem, $) {
-    let map = {};
     let promises = [];
 
     field.items.forEach((fieldItem) => {
         promises.push(
             getValue(fieldItem, getElem(fieldItem, $elem, $))
-                .then((value) => {
-                    return map[fieldItem.key] = value;
-                })
         )
     });
 
-    return Promise.all(promises);
+    return Promise.all(promises)
+        .then((data) => {
+            let map = {};
+
+            field.items.forEach((fieldItem, index) => {
+                map[fieldItem.key] = data[index];
+            });
+
+            return map;
+    });
 }
 
 function getFieldValue(field, $elem, $) {
@@ -157,7 +114,6 @@ const parse = (url) => {
                             promises.push(
                                 getFieldValue(field, $elem, $)
                                     .then((value) => {
-                                        // console.log(value);
                                         post[field.name] = value;
                                     })
                             );
@@ -165,7 +121,6 @@ const parse = (url) => {
 
                         return Promise.all(promises)
                             .then((data) => {
-                                console.log(data);
                                 console.log(post);
                             });
                     })

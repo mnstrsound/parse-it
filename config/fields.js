@@ -67,7 +67,11 @@ let options = {
                     selector: '.field-row img',
                     upload: true,
                     strategy: function ($field) {
-                        return $field.attr('data-original').replace(/\?\d+$/, '');
+                        let value = $field.attr('data-original');
+
+                        return value
+                            ? value.replace(/\?\d+$/, '')
+                            : null;
                     }
                 },
                 {
