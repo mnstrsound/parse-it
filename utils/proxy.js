@@ -21,14 +21,3 @@ module.exports = class Proxy {
         this.free.push(proxy);
     }
 };
-
-// var proxylist = [];
-// $('[role="row"]').each(function() {
-//     var $row = $(this);
-//     var $td = $row.find('td');
-//
-//     if ($td.eq(4).text() == 'elite proxy') {
-//         proxylist.push(`'http://${$td.eq(0).text()}:${$td.eq(1).text()}'\n`);
-//     }
-// });
-// console.log(proxylist.toString());

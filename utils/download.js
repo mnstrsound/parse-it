@@ -2,26 +2,6 @@ let fetch = require('node-fetch');
 let fs = require('fs');
 let path = require('path');
 
-function getFileName(url) {
-    url = url.substring(0, (url.indexOf('#') == -1) ? url.length : url.indexOf('#'));
-    url = url.substring(0, (url.indexOf('?') == -1) ? url.length : url.indexOf('?'));
-    url = url.substring(0, (url.indexOf('.') == -1) ? url.length : url.lastIndexOf('.'));
-    url = url.substring(url.lastIndexOf('/') + 1, url.length);
-    return url;
-}
-
-function getFileExt(fileName) {
-    return fileName.slice((fileName.lastIndexOf(".") - 1 >>> 0) + 2);
-}
-
-function getFullFilePath(name, ext, dir) {
-    if (!name) throw new Error('name is required');
-    let path = name;
-    if (ext) path += '.' + ext;
-    if (dir) path = dir + '/' + path;
-    return path;
-}
-
 const mkdirp = (dir) => {
     return new Promise((resolve, reject) => {
         let dirname;

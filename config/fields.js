@@ -14,25 +14,19 @@ let options = {
             name: 'title',
             type: 'text',
             selector: '.recipe-header__name',
-            strategy: function ($field) {
-                return $field.text().trim();
-            }
+            strategy: $field => $field.text().trim()
         },
         {
             name: 'description',
             type: 'text',
-            selector: '[itemprop="description"]',
-            strategy: function ($field) {
-                return $field.text().trim();
-            }
+            selector: $post => $post.find('.section-title').next(),
+            strategy: $field => $field.text().trim()
         },
         {
             name: 'duration',
             type: 'text',
             selector: '.entry-stats__item_cooking .entry-stats__value',
-            strategy: function ($field) {
-                return $field.text().trim();
-            }
+            strategy: $field => $field.text().trim()
         },
         {
             name: 'ingredients',
@@ -42,17 +36,13 @@ let options = {
             items: [
                 {
                     key: 'name',
-                    selector: '.checkbox span',
-                    strategy: function ($field) {
-                        return $field[0] && $field[0].children[0].data;
-                    }
+                    selector: $post => $post.find('.definition-list-table__tr span span'),
+                    strategy: $field => $field[0] && $field[0].children[0].data
                 },
                 {
                     key: 'value',
                     selector: '.definition-list-table__td_value',
-                    strategy: function ($field) {
-                        return $field.text().trim();
-                    }
+                    strategy: $field => $field.text().trim()
                 }
             ]
         },
@@ -60,13 +50,13 @@ let options = {
             name: 'steps',
             type: 'map',
             multiple: true,
-            selector: '[itemprop="recipeInstructions"] .content-box',
+            selector: $post => $post.find('.js-mediator-article .content-box').first(),
             items: [
                 {
                     key: 'image',
                     selector: '.field-row img',
                     upload: true,
-                    strategy: function ($field) {
+                    strategy: $field => {
                         let value = $field.attr('data-original');
 
                         return value
@@ -77,12 +67,10 @@ let options = {
                 {
                     key: 'text',
                     selector: '.plain-text',
-                    strategy: function ($field) {
-                        return $field.text().trim();
-                    }
+                    strategy: $field => $field.text().trim()
                 }
             ]
-        },
+        }
     ]
 };
 
