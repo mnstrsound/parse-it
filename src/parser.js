@@ -4,70 +4,8 @@ import fetch from 'node-fetch';
 import download from '../utils/download';
 import { normalizeURL } from '../utils/helpers';
 
-function getElem(field, $post, $) {
-    return typeof field.selector === 'function' ?
-        field.selector($post, $) :
-        $post.find(field.selector);
-}
-
-
-function getValue(field, $elem, $) {
-    return new Promise((resolve, reject) => {
-        const value = field.strategy($elem);
-
-        if (!field.upload) {
-            resolve(value);
-        } else {
-            resolve(value
-                ? download({
-                    url: normalizeURL(url, field.strategy($elem)),
-                    dir: './media'
-                })
-                : ''
-            );
-        }
-    });
-}
-
-function getMapValue(field, $elem, $) {
-    let promises = [];
-
-    field.items.forEach((fieldItem) => {
-        promises.push(
-            getValue(fieldItem, getElem(fieldItem, $elem, $))
-        );
-    });
-
-    return Promise.all(promises)
-        .then((data) => {
-            let map = {};
-
-            field.items.forEach((fieldItem, index) => {
-                map[fieldItem.key] = data[index];
-            });
-
-            return map;
-        });
-}
-
-function getFieldValue(field, $elem, $) {
-    if (field.multiple) {
-        let promises = [];
-
-        $elem.each((index, elemItem) => {
-            if (field.type === 'map') {
-                promises.push(getMapValue(field, $(elemItem), $));
-            } else {
-                promises.push(getValue(field, $(elemItem), $));
-            }
-        });
-        return Promise.all(promises);
-    }
-
-    return getValue(field, $elem, $);
-}
-
 export default class Parser {
+
     constructor(options) {
         const { url, item, fields, pager } = options;
         this.url = url;
@@ -78,6 +16,67 @@ export default class Parser {
 
     start() {
         this.parsePage(this.url);
+    }
+
+    getElem(field, $post, $) {
+        return typeof field.selector === 'function' ?
+            field.selector($post, $) :
+            $post.find(field.selector);
+    }
+
+    getMapValue(field, $elem, $) {
+        let promises = [];
+
+        field.items.forEach((fieldItem) => {
+            promises.push(
+                this.getValue(fieldItem, this.getElem(fieldItem, $elem, $))
+            );
+        });
+
+        return Promise.all(promises)
+            .then((data) => {
+                let map = {};
+
+                field.items.forEach((fieldItem, index) => {
+                    map[fieldItem.key] = data[index];
+                });
+
+                return map;
+            });
+    }
+
+    getFieldValue(field, $elem, $) {
+        if (field.multiple) {
+            let promises = [];
+
+            $elem.each((index, elemItem) => {
+                if (field.type === 'map') {
+                    promises.push(this.getMapValue(field, $(elemItem), $));
+                } else {
+                    promises.push(this.getValue(field, $(elemItem), $));
+                }
+            });
+            return Promise.all(promises);
+        }
+        return this.getValue(field, $elem, $);
+    }
+
+    getValue(field, $elem, $) {
+        return new Promise((resolve, reject) => {
+            const value = field.strategy($elem);
+
+            if (!field.upload) {
+                resolve(value);
+            } else {
+                resolve(value
+                    ? download({
+                        url: normalizeURL(this.url, field.strategy($elem)),
+                        dir: './media'
+                    })
+                    : ''
+                );
+            }
+        });
     }
 
     parsePage(url) {
@@ -106,10 +105,10 @@ export default class Parser {
                             const promises = [];
 
                             this.fields.forEach((field) => {
-                                const $elem = getElem(field, $post, $);
+                                const $elem = this.getElem(field, $post, $);
 
                                 promises.push(
-                                    getFieldValue(field, $elem, $)
+                                    this.getFieldValue(field, $elem, $)
                                         .then((value) => {
                                             post[field.name] = value;
                                         })
